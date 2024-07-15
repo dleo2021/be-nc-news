@@ -3,6 +3,7 @@ const db = require("../db/connection");
 const request = require("supertest");
 const seed = require("../db/seeds/seed");
 const data = require("../db/data/test-data/index");
+const endpoints = require("../endpoints.json")
 
 beforeEach(() => {
   return seed(data);
@@ -19,6 +20,17 @@ describe("GET /api/invalid-url", () => {
     .expect(404)
     .then(({body}) => {
       expect(body.message).toBe("Not found")
+    })
+  })
+})
+
+describe("GET /api", () => {
+  it("responds with a json detailing all available endpoints", () => {
+    return request(app)
+    .get("/api")
+    .expect(200)
+    .then(({body}) => {
+      expect(body.endpoints).toEqual(endpoints)
     })
   })
 })
