@@ -3,7 +3,7 @@ const {
   convertTimestampToDate,
   createRef,
   formatComments,
-  removeBodyFromArticles,
+  checkArticleExists,
 } = require("../db/seeds/utils");
 
 const fetchTopics = () => {
@@ -40,8 +40,49 @@ const fetchArticles = () => {
         articles.created_at DESC;`
     )
     .then(({ rows }) => {
-      return rows
+      return rows;
     });
 };
 
-module.exports = { fetchTopics, fetchArticleById, fetchArticles };
+const fetchCommentsByArticleId = (articleId) => {
+  const queryValues = [];
+
+  let sqlString = `
+    SELECT 
+      comments.comment_id, comments.body, comments.author, comments.votes, comments.created_at, articles.article_id
+    FROM 
+      comments
+    JOIN
+      articles
+    ON 
+      comments.article_id = articles.article_id
+  `;
+
+  if (articleId) {
+    sqlString += `WHERE articles.article_id = $1 `;
+    queryValues.push(articleId);
+  }
+
+  sqlString += `ORDER BY created_at DESC;`;
+
+  const promiseArray = [];
+  promiseArray.push(db.query(sqlString, queryValues));
+
+  if (articleId) {
+    promiseArray.push(checkArticleExists(articleId));
+  }
+
+  return Promise.all(promiseArray).then(([queryResults, articleResults]) => {
+    if (queryResults.rows.length === 0 && articleResults === false) {
+      return Promise.reject({ status: 404, message: "Article not found" });
+    }
+    return queryResults.rows;
+  });
+};
+
+module.exports = {
+  fetchTopics,
+  fetchArticleById,
+  fetchArticles,
+  fetchCommentsByArticleId,
+};
