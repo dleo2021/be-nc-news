@@ -1,4 +1,4 @@
-const { fetchTopics, fetchArticleById, fetchArticles } = require("../models/model")
+const { fetchTopics, fetchArticleById, fetchArticles, fetchCommentsByArticleId } = require("../models/model")
 const endpoints = require("../endpoints.json")
 const fs = require("fs/promises")
 const { removeBodyFromArticles } = require("../db/seeds/utils")
@@ -35,8 +35,20 @@ const getArticleById = (request, response, next) => {
 const getArticles = (request, response, next) => {
     fetchArticles().then((articles) => {
         response.status(200).send({articles})
+    }).catch((err) => {
+        next(err)
+    })
+}
+
+const getCommentsByarticleId = (request, response, next) => {
+    const {article_id} = request.params
+    fetchCommentsByArticleId(article_id)
+    .then((comments) => {
+        response.status(200).send({comments})
+    }).catch((err) => {
+        next(err)
     })
 }
 
 
-module.exports = {getTopics, getDescriptionOfEndpoints, getArticleById, getArticles}
+module.exports = {getTopics, getDescriptionOfEndpoints, getArticleById, getArticles, getCommentsByarticleId}

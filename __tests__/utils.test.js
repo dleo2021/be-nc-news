@@ -2,8 +2,13 @@ const {
   convertTimestampToDate,
   createRef,
   formatComments,
-  removeBodyFromArticles,
+  checkArticleExists,
 } = require("../db/seeds/utils");
+const db = require("../db/connection")
+
+afterAll(() => {
+  return db.end()
+})
 
 describe("convertTimestampToDate", () => {
   test("returns a new object", () => {
@@ -103,3 +108,19 @@ describe("formatComments", () => {
     expect(formattedComments[0].created_at).toEqual(new Date(timestamp));
   });
 });
+
+describe("checkArticleExists", () => {
+  it("Should return true if the article exists", () => {
+    return checkArticleExists(1)
+    .then((result) => {
+      expect(result).toBe(true)
+    })
+  })
+  it("Should return false if the article does not exist", () => {
+    return checkArticleExists(56)
+    .then((result) => {
+      expect(result).toBe(false)
+    })
+  })
+})
+
