@@ -20,3 +20,12 @@ exports.formatComments = (comments, idLookup) => {
     };
   });
 };
+
+exports.removeBodyFromArticles = (articles) => {
+  const transformedArticles = articles.map(article => {
+    const articleCopy = {...article}
+    delete articleCopy.body
+    return articleCopy
+  })
+  return transformedArticles
+}

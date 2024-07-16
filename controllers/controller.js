@@ -1,6 +1,7 @@
-const { fetchTopics, fetchArticleById } = require("../models/model")
+const { fetchTopics, fetchArticleById, fetchArticles } = require("../models/model")
 const endpoints = require("../endpoints.json")
 const fs = require("fs/promises")
+const { removeBodyFromArticles } = require("../db/seeds/utils")
 
 const getTopics = (request, response, next) => {
     fetchTopics().then((topics) => {
@@ -31,5 +32,11 @@ const getArticleById = (request, response, next) => {
     })
 }
 
+const getArticles = (request, response, next) => {
+    fetchArticles().then((articles) => {
+        response.status(200).send({articles})
+    })
+}
 
-module.exports = {getTopics, getDescriptionOfEndpoints, getArticleById}
+
+module.exports = {getTopics, getDescriptionOfEndpoints, getArticleById, getArticles}
