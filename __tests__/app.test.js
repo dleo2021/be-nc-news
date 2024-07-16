@@ -75,18 +75,68 @@ describe("/api/articles/:article_id", () => {
   });
   it("Error - responds with a status 400 - bad request when passed an invalid article_id format", () => {
     return request(app)
-    .get("/api/articles/not-a number")
-    .expect(400)
-    .then(({body}) => {
-      expect(body.message).toBe("Bad request")
-    })
-  })
+      .get("/api/articles/not-a number")
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.message).toBe("Bad request");
+      });
+  });
   it("Error - responds with a status 404 - not found when passed a valid but non-existent article_id", () => {
     return request(app)
-    .get("/api/articles/999999")
-    .expect(404)
-    .then(({body}) => {
-      expect(body.message).toBe("Article not found")
-    })
-  })
+      .get("/api/articles/999999")
+      .expect(404)
+      .then(({ body }) => {
+        expect(body.message).toBe("Article not found");
+      });
+  });
+});
+
+describe("/api/articles", () => {
+  it("GET 200: responds with an array of article objects with the correct property keys", () => {
+    return request(app)
+      .get("/api/articles")
+      .expect(200)
+      .then(({ body }) => {
+        const articles = body.articles;
+        expect(articles.length).toBe(13);
+        articles.forEach((article) => {
+          expect(article).toHaveProperty("title");
+          expect(article).toHaveProperty("topic");
+          expect(article).toHaveProperty("created_at");
+          expect(article).toHaveProperty("votes");
+          expect(article).toHaveProperty("comment_count");
+          expect(article).toHaveProperty("article_img_url");
+          expect(article).toHaveProperty("article_id");
+          expect(article).toHaveProperty("author");
+        });
+      });
+  });
+  it("Provides the correct comment count for an article", () => {
+    return request(app)
+      .get("/api/articles")
+      .expect(200)
+      .then(({ body }) => {
+        const articles = body.articles;
+        const firstArticle = articles.find(
+          (article) => article.article_id === 1
+        );
+        const fifthArticle = articles.find(
+          (article) => article.article_id === 5
+        );
+        expect(firstArticle.comment_count).toBe("11");
+        expect(fifthArticle.comment_count).toBe("2");
+      });
+  });
+  it("Sorts the articles in descending order based on created_at", () => {
+    return request(app)
+      .get("/api/articles")
+      .expect(200)
+      .then(({ body }) => {
+        const articles = body.articles;
+        expect(articles).toBeSortedBy("created_at", {
+          descending: true,
+          coerce: true,
+        });
+      });
+  });
 });
