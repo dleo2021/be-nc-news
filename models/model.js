@@ -113,7 +113,10 @@ const createComment = (articleId, { username, body }) => {
 
 const updateArticleVotes = (articleId, votes) => {
   if (!votes) {
-    return Promise.reject({ status: 400, message: "Bad request: Invalid/missing inc_votes" });
+    return Promise.reject({
+      status: 400,
+      message: "Bad request: Invalid/missing inc_votes",
+    });
   }
   return db
     .query(
@@ -138,6 +141,28 @@ const updateArticleVotes = (articleId, votes) => {
     });
 };
 
+const removeCommentById = (commentId) => {
+  return db
+    .query(
+      `
+    DELETE FROM
+      comments
+    WHERE
+      comment_id = $1
+    RETURNING *;`,
+      [commentId]
+    )
+    .then(({ rows }) => {
+      if (rows.length === 0) {
+        return Promise.reject({
+          status: 404,
+          message: "Not found: comment_id does not exist",
+        });
+      }
+      return rows[0];
+    });
+};
+
 module.exports = {
   fetchTopics,
   fetchArticleById,
@@ -145,4 +170,5 @@ module.exports = {
   fetchCommentsByArticleId,
   createComment,
   updateArticleVotes,
+  removeCommentById,
 };

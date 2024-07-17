@@ -7,6 +7,7 @@ const {
   getCommentsByarticleId,
   postComment,
   patchArticleVotes,
+  deleteCommentById,
 } = require("./controllers/controller");
 const app = express();
 
@@ -25,6 +26,8 @@ app.get("/api/articles/:article_id/comments", getCommentsByarticleId);
 app.post("/api/articles/:article_id/comments", postComment);
 
 app.patch("/api/articles/:article_id", patchArticleVotes)
+
+app.delete("/api/comments/:comment_id", deleteCommentById)
 
 app.all("*", (request, response, next) => {
   response.status(404).send({ message: "Not found" });

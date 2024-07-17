@@ -200,7 +200,6 @@ describe("POST /api/articles/:article_id/comments", () => {
       .expect(201)
       .then(({ body }) => {
         const comment = body.comment;
-        console.log(comment);
         expect(comment).toEqual({
           comment_id: expect.any(Number),
           votes: 0,
@@ -308,7 +307,6 @@ describe("PATCH /api/articles/article_id", () => {
       .expect(200)
       .then(({ body }) => {
         const article = body.article;
-        console.log(article)
         expect(article).toEqual({
           article_id: 7,
           title: "Z",
@@ -398,6 +396,28 @@ describe("PATCH /api/articles/article_id", () => {
       .expect(400)
       .send(({ body }) => {
         expect(body.message).toBe("Bad request: Invalid/missing inc_votes");
+      });
+  });
+});
+
+describe("DELETE /api/comments/comment_id", () => {
+  it("Delete 204 - deletes the comment acording to comment_id provided", () => {
+    return request(app).delete("/api/comments/10").expect(204);
+  });
+  it("Responds with an error 400 status when comment_id is invalid", () => {
+    return request(app)
+      .delete("/api/comments/not-a-valid-id")
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.message).toBe("Bad request");
+      });
+  });
+  it("Responds with an error 404 status when passed in an valid but non-existent comment_id", () => {
+    return request(app)
+      .delete("/api/comments/39")
+      .expect(404)
+      .then(({ body }) => {
+        expect(body.message).toBe("Not found: comment_id does not exist");
       });
   });
 });
