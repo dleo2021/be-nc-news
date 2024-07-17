@@ -3,6 +3,7 @@ const {
   createRef,
   formatComments,
   checkArticleExists,
+  checkTopicExists,
 } = require("../db/seeds/utils");
 const db = require("../db/connection")
 
@@ -118,6 +119,21 @@ describe("checkArticleExists", () => {
   })
   it("Should return false if the article does not exist", () => {
     return checkArticleExists(56)
+    .then((result) => {
+      expect(result).toBe(false)
+    })
+  })
+})
+
+describe("checkTopicExists", () => {
+  it("Should return true if the topic exists", () => {
+    return checkTopicExists("mitch")
+    .then((result) => {
+      expect(result).toBe(true)
+    })
+  })
+  it("Should return false if the topic does not exist", () => {
+    return checkTopicExists("pigeon")
     .then((result) => {
       expect(result).toBe(false)
     })
