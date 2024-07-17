@@ -29,3 +29,10 @@ exports.checkArticleExists = (articleId) => {
     return rows.length === 0 ? false : true
   })
 }
+
+exports.checkTopicExists = (topic) => {
+  return db.query("SELECT * FROM topics WHERE slug = $1", [topic])
+  .then(({rows}) => {
+    return rows.length === 0 ? false : true
+  })
+}

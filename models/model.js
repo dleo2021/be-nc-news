@@ -4,6 +4,7 @@ const {
   createRef,
   formatComments,
   checkArticleExists,
+  checkTopicExists,
 } = require("../db/seeds/utils");
 
 const fetchTopics = () => {
@@ -23,36 +24,64 @@ const fetchArticleById = (articleId) => {
     });
 };
 
-const fetchArticles = (sortBy = "created_at", order = "desc") => {
-  
-  const validSortByColumns = ['author', 'title', 'body', "article_id", "created_at"];
-  const validOrders = ['asc', 'desc'];
+const fetchArticles = (sortBy = "created_at", order = "desc", topic) => {
+  const validSortByColumns = [
+    "author",
+    "title",
+    "body",
+    "article_id",
+    "created_at",
+  ];
+  const validOrders = ["asc", "desc"];
 
   if (!validSortByColumns.includes(sortBy)) {
-    return Promise.reject({status: 400, message: "Bad request: Invalid sort_by column"})
+    return Promise.reject({
+      status: 400,
+      message: "Bad request: Invalid sort_by column",
+    });
   }
   if (!validOrders.includes(order)) {
-    return Promise.reject({status: 400, message: "Bad request: Invalid order"})
+    return Promise.reject({
+      status: 400,
+      message: "Bad request: Invalid order",
+    });
   }
 
-  return db
-    .query(
-      `SELECT 
-        articles.author, articles.title, articles.article_id, articles.topic, articles.created_at, articles.votes, articles.article_img_url, COUNT(comments.comment_id) AS comment_count 
-      FROM 
-        articles
-      LEFT JOIN 
-        comments 
-      ON 
-        articles.article_id = comments.article_id
-      GROUP BY 
-        articles.article_id 
-      ORDER BY
-        articles.${sortBy} ${order};`
-    )
-    .then(({ rows }) => {
-      return rows;
-    });
+  let queryString = `
+  SELECT 
+    articles.author, articles.title, articles.article_id, articles.topic, articles.created_at, articles.votes, articles.article_img_url, 
+  COUNT
+    (comments.comment_id) AS comment_count 
+  FROM 
+    articles 
+  LEFT JOIN 
+    comments 
+  ON 
+    articles.article_id = comments.article_id 
+  `;
+
+  const queryValues = [];
+
+  if (topic) {
+    queryString += `WHERE articles.topic = $1 `;
+    queryValues.push(topic);
+  }
+
+  queryString += `GROUP BY articles.article_id ORDER BY articles.${sortBy} ${order};`;
+
+  const promiseArray = [];
+  promiseArray.push(db.query(queryString, queryValues));
+
+  if (topic) {
+    promiseArray.push(checkTopicExists(topic));
+  }
+
+  return Promise.all(promiseArray).then(([queryResults, topicResult]) => {
+    if (queryResults.rows.length === 0 && topicResult === false) {
+      return Promise.reject({ status: 404, message: "Topic not found" });
+    }
+    return queryResults.rows;
+  });
 };
 
 const fetchCommentsByArticleId = (articleId) => {
@@ -92,11 +121,10 @@ const fetchCommentsByArticleId = (articleId) => {
 };
 
 const fetchUsers = () => {
-  return db.query(`SELECT * FROM users;`)
-  .then(({rows}) => {
-    return rows
-  })
-}
+  return db.query(`SELECT * FROM users;`).then(({ rows }) => {
+    return rows;
+  });
+};
 
 const createComment = (articleId, { username, body }) => {
   const createdAt = new Date();
@@ -189,5 +217,5 @@ module.exports = {
   createComment,
   updateArticleVotes,
   removeCommentById,
-  fetchUsers
+  fetchUsers,
 };

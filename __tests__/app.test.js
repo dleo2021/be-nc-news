@@ -139,41 +139,82 @@ describe("GET /api/articles", () => {
         });
       });
   });
-  it("?sort_by= query. Status 200: responds with articles sorted according to a valid column query (defaults to descending order)", () => {
-    return request(app)
-      .get("/api/articles?sort_by=title")
-      .expect(200)
-      .then(({ body: { articles } }) => {
-        expect(articles).toBeSortedBy("title", {
-          descending: true,
+  describe("GET /api/articles - sort_by and order queries", () => {
+    it("?sort_by= query. Status 200: responds with articles sorted according to a valid column query (defaults to descending order)", () => {
+      return request(app)
+        .get("/api/articles?sort_by=title")
+        .expect(200)
+        .then(({ body: { articles } }) => {
+          expect(articles).toBeSortedBy("title", {
+            descending: true,
+          });
         });
-      });
-  });
-  it("?sort_by=&order= query. Status 200: responds with articles sorted by any valid column query and a specified order (asc)", () => {
-    return request(app)
-      .get("/api/articles?sort_by=title&order=asc")
-      .expect(200)
-      .then(({ body: { articles } }) => {
-        expect(articles).toBeSortedBy("title", {
-          ascending: true,
+    });
+    it("?sort_by=&order= query. Status 200: responds with articles sorted by any valid column query and a specified order (asc)", () => {
+      return request(app)
+        .get("/api/articles?sort_by=title&order=asc")
+        .expect(200)
+        .then(({ body: { articles } }) => {
+          expect(articles).toBeSortedBy("title", {
+            ascending: true,
+          });
         });
-      });
+    });
+    it("?sort_by= reponds with a status 400: bad request when passed an invalid sort_by query", () => {
+      return request(app)
+        .get("/api/articles?sort_by=not-a-valid-column")
+        .expect(400)
+        .then(({ body: { message } }) => {
+          expect(message).toBe("Bad request: Invalid sort_by column");
+        });
+    });
+    it("?order= responds with a status 400: bad request when passed an invalid order query", () => {
+      return request(app)
+        .get("/api/articles?sort_by=author&order=hello")
+        .expect(400)
+        .then(({ body: { message } }) => {
+          expect(message).toBe("Bad request: Invalid order");
+        });
+    });
   });
-  it("?sort_by= reponds with a status 400: bad request when passed an invalid sort_by query", () => {
-    return request(app)
-      .get("/api/articles?sort_by=not-a-valid-column")
-      .expect(400)
-      .then(({ body: { message } }) => {
-        expect(message).toBe("Bad request: Invalid sort_by column");
-      });
-  });
-  it("?order= responds with a status 400: bad request when passed an invalid order query", () => {
-    return request(app)
-      .get("/api/articles?sort_by=author&order=hello")
-      .expect(400)
-      .then(({ body: { message } }) => {
-        expect(message).toBe("Bad request: Invalid order");
-      });
+  describe("GET /api/articles - topic query", () => {
+    it("get 200: responsed with filtered articles according to given topic query", () => {
+      return request(app)
+        .get("/api/articles?topic=mitch")
+        .expect(200)
+        .then(({ body: { articles } }) => {
+          expect(articles.length).toBe(12);
+          articles.forEach((article) => {
+            expect(article.topic).toBe("mitch");
+          });
+        });
+    });
+    it("get 200: responds with an empty array when passed a valid topic but no articles are categorised by this topic", () => {
+      return request(app)
+        .get("/api/articles?topic=paper")
+        .expect(200)
+        .then(({ body: { articles } }) => {
+          expect(articles.length).toBe(0);
+          expect(articles).toEqual([]);
+        });
+    });
+    it("get 200: responds with a correct array of articles when 3 queries are made to the endpoint", () => {
+      return request(app)
+        .get("/api/articles?sort_by=author&order=asc&topic=mitch")
+        .expect(200)
+        .then(({ body: { articles } }) => {
+          expect(articles.length).toBe(12);
+          expect(articles).toBeSortedBy("author", { ascending: true });
+        });
+    });
+    it("Responds with a 404 status when a non-existant topic is used", () => {
+      return request(app)
+        .get("/api/articles?topic=not-a-topic")
+        .expect(404)
+        .then(({ body: { message } }) => {
+          expect(message).toBe("Topic not found");
+        });
+    });
   });
 });
 
