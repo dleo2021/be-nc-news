@@ -80,6 +80,13 @@ const fetchCommentsByArticleId = (articleId) => {
   });
 };
 
+const fetchUsers = () => {
+  return db.query(`SELECT * FROM users;`)
+  .then(({rows}) => {
+    return rows
+  })
+}
+
 const createComment = (articleId, { username, body }) => {
   const createdAt = new Date();
 
@@ -171,4 +178,5 @@ module.exports = {
   createComment,
   updateArticleVotes,
   removeCommentById,
+  fetchUsers
 };
