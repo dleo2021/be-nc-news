@@ -23,7 +23,18 @@ const fetchArticleById = (articleId) => {
     });
 };
 
-const fetchArticles = () => {
+const fetchArticles = (sortBy = "created_at", order = "desc") => {
+  
+  const validSortByColumns = ['author', 'title', 'body', "article_id", "created_at"];
+  const validOrders = ['asc', 'desc'];
+
+  if (!validSortByColumns.includes(sortBy)) {
+    return Promise.reject({status: 400, message: "Bad request: Invalid sort_by column"})
+  }
+  if (!validOrders.includes(order)) {
+    return Promise.reject({status: 400, message: "Bad request: Invalid order"})
+  }
+
   return db
     .query(
       `SELECT 
@@ -37,7 +48,7 @@ const fetchArticles = () => {
       GROUP BY 
         articles.article_id 
       ORDER BY
-        articles.created_at DESC;`
+        articles.${sortBy} ${order};`
     )
     .then(({ rows }) => {
       return rows;
