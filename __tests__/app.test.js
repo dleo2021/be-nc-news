@@ -298,3 +298,106 @@ describe("POST /api/articles/:article_id/comments", () => {
       });
   });
 });
+
+describe("PATCH /api/articles/article_id", () => {
+  it("Patch 200: responds with the updated article where the votes count will have been altered correctly", () => {
+    const votes = { inc_votes: 13 };
+    return request(app)
+      .patch("/api/articles/7")
+      .send(votes)
+      .expect(200)
+      .then(({ body }) => {
+        const article = body.article;
+        console.log(article)
+        expect(article).toEqual({
+          article_id: 7,
+          title: "Z",
+          topic: "mitch",
+          author: "icellusedkars",
+          body: "I was hungry.",
+          created_at: "2020-01-07T14:08:00.000Z",
+          votes: 13,
+          article_img_url:
+            "https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700",
+        });
+      });
+  });
+  it("responds with a status 200: sends updated article when extra keys are sent on request body (they are ignored as long as inc_votes is present", () => {
+    const votes = {
+      inc_votes: -20,
+      username: "rogersop",
+      body: "I'm changing the votes",
+    };
+    return request(app)
+      .patch("/api/articles/1")
+      .send(votes)
+      .expect(200)
+      .then(({ body }) => {
+        const { article } = body;
+        expect(article).toEqual({
+          article_id: 1,
+          title: "Living in the shadow of a great man",
+          topic: "mitch",
+          author: "butter_bridge",
+          body: "I find this existence challenging",
+          created_at: "2020-07-09T20:11:00.000Z",
+          votes: 80,
+          article_img_url:
+            "https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700",
+        });
+      });
+  });
+  it("responds with an error 400 status when inc_votes is undefined (e.g. inc_votez - spelled incorrectly", () => {
+    const votes = { inc_votez: 12 };
+    return request(app)
+      .patch("/api/articles/1")
+      .send(votes)
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.message).toBe("Bad request: Invalid/missing inc_votes");
+      });
+  });
+  it("Responds with an error 400 status - Bad request when value of inc_votes is a string", () => {
+    const votes = { inc_votes: "not-a-number" };
+    return request(app)
+      .patch("/api/articles/10")
+      .send(votes)
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.message).toBe("Bad request");
+      });
+  });
+  it("Responds with an error 404 status when passed in an article_id that does not exist", () => {
+    const votes = { inc_votes: 14 };
+    return request(app)
+      .patch("/api/articles/78")
+      .send(votes)
+      .expect(404)
+      .then(({ body }) => {
+        expect(body.message).toBe("Not found: article_id does not exist");
+      });
+  });
+  it("Responds with an error 400 status when the article_id input is invalid", () => {
+    const votes = { inc_votes: 46 };
+    return request(app)
+      .patch("/api/articles/not-a-valid-id")
+      .send(votes)
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.message).toBe("Bad request");
+      });
+  });
+  it("Responds with a error 400 status when inc_votes is not present on the request body", () => {
+    const votes = {
+      username: "rogersop",
+      likesCoding: true,
+    };
+    return request(app)
+      .patch("/api/articles/8")
+      .send(votes)
+      .expect(400)
+      .send(({ body }) => {
+        expect(body.message).toBe("Bad request: Invalid/missing inc_votes");
+      });
+  });
+});
