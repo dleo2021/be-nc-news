@@ -80,9 +80,41 @@ const fetchCommentsByArticleId = (articleId) => {
   });
 };
 
+const createComment = (articleId, { username, body }) => {
+  const createdAt = new Date();
+
+  if (!username) {
+    return Promise.reject({
+      status: 400,
+      message: "Bad request: no username provided",
+    });
+  }
+  if (!body) {
+    return Promise.reject({
+      status: 400,
+      message: "Bad request: no body provided",
+    });
+  }
+
+  return db
+    .query(
+      `
+    INSERT INTO 
+      comments (body, author, article_id, created_at, votes)
+    VALUES 
+      ($1, $2, $3, $4, 0) 
+    RETURNING *;`,
+      [body, username, articleId, createdAt]
+    )
+    .then(({ rows }) => {
+      return rows[0];
+    });
+};
+
 module.exports = {
   fetchTopics,
   fetchArticleById,
   fetchArticles,
   fetchCommentsByArticleId,
+  createComment,
 };

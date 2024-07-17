@@ -1,4 +1,4 @@
-const { fetchTopics, fetchArticleById, fetchArticles, fetchCommentsByArticleId } = require("../models/model")
+const { fetchTopics, fetchArticleById, fetchArticles, fetchCommentsByArticleId, createComment } = require("../models/model")
 const endpoints = require("../endpoints.json")
 const fs = require("fs/promises")
 const { removeBodyFromArticles } = require("../db/seeds/utils")
@@ -50,5 +50,17 @@ const getCommentsByarticleId = (request, response, next) => {
     })
 }
 
+const postComment = (request, response, next) => {
+    const {article_id} = request.params
+    const {username, body} = request.body
 
-module.exports = {getTopics, getDescriptionOfEndpoints, getArticleById, getArticles, getCommentsByarticleId}
+    createComment(article_id, {username, body})
+    .then((comment) => {
+        response.status(201).send({comment})
+    })
+    .catch((err) => {
+        next(err)
+    })
+}
+
+module.exports = {getTopics, getDescriptionOfEndpoints, getArticleById, getArticles, getCommentsByarticleId, postComment}
