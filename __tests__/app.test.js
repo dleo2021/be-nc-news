@@ -567,3 +567,95 @@ describe("GET /api/users/:username", () => {
     })
   })
 })
+
+describe("PATCH /api/comments/:comment_id", () => {
+  it("Patch 200: responds with the updated comment object with votes incremented according to request body", () => {
+    const votes = ({inc_votes: 1})
+    return request(app)
+    .patch("/api/comments/7")
+    .send(votes)
+    .expect(200)
+    .then(({body: {comment}}) => {
+      expect(comment).toMatchObject({
+        comment_id: 7,
+        body: 'Lobster pot',
+        article_id: 1,
+        author: 'icellusedkars',
+        votes: 1,
+        created_at: "2020-05-15T20:19:00.000Z"
+      })
+    })
+  })
+  it("responds with a status 200: sends updated comment when extra keys are sent on request body (they are ignored as long as inc_votes is present", () => {
+    const votes = {
+      inc_votes: 27,
+      username: "rogersop",
+      body: "I'm changing the votes",
+    };
+    return request(app)
+      .patch("/api/comments/13")
+      .send(votes)
+      .expect(200)
+      .then(({ body: {comment} }) => {
+        console.log(comment)
+        expect(comment).toEqual({
+          comment_id: 13,
+          body: 'Fruit pastilles',
+          article_id: 1,
+          author: 'icellusedkars',
+          votes: 27,
+          created_at: '2020-06-15T10:25:00.000Z'
+        });
+      });
+  });
+  it("responds with an error 400 status when inc_votes is undefined (e.g. inc_votez - spelled incorrectly", () => {
+    const votes = { inc_votez: 5 };
+    return request(app)
+      .patch("/api/comments/2")
+      .send(votes)
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.message).toBe("Bad request: Invalid request body");
+      });
+  });
+  it("Responds with an error 400 status - Bad request when value of inc_votes is a string", () => {
+    const votes = { inc_votes: "not-a-number" };
+    return request(app)
+      .patch("/api/comments/11")
+      .send(votes)
+      .expect(400)
+      .then(({ body: {message} }) => {
+        expect(message).toBe("Bad request");
+      });
+  });
+  it("Responds with an error 404 status when passed in an comment_id that does not exist", () => {
+    const votes = { inc_votes: 14 };
+    return request(app)
+      .patch("/api/comments/782")
+      .send(votes)
+      .expect(404)
+      .then(({ body }) => {
+        expect(body.message).toBe("Not found: comment does not exist");
+      });
+  });
+  it("Responds with an error 400 status when the comment_id input is invalid", () => {
+    const votes = { inc_votes: 46 };
+    return request(app)
+      .patch("/api/comments/not-a-valid-id")
+      .send(votes)
+      .expect(400)
+      .then(({ body: {message} }) => {
+        expect(message).toBe("Bad request");
+      });
+  });
+  it("Responds with a error 400 status when inc_votes is not present on the request body", () => {
+    const votes = {};
+    return request(app)
+      .patch("/api/comments/8")
+      .send(votes)
+      .expect(400)
+      .send(({ body: {message} }) => {
+        expect(message).toBe("Bad request: Invalid request body");
+      });
+  });
+})

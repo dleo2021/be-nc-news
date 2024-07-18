@@ -8,6 +8,7 @@ const {
   removeCommentById,
   fetchUsers,
   fetchUserByUsername,
+  updateCommentVotes,
 } = require("../models/model");
 const endpoints = require("../endpoints.json");
 const fs = require("fs/promises");
@@ -114,6 +115,18 @@ const patchArticleVotes = (request, response, next) => {
     });
 };
 
+const patchCommentVotes = (request, response, next) => {
+  const {comment_id} = request.params
+  const {inc_votes} = request.body
+  updateCommentVotes(comment_id, inc_votes)
+  .then((comment) => {
+    response.status(200).send({comment})
+  })
+  .catch((err) => {
+    next(err)
+  })
+}
+
 const deleteCommentById = (request, response, next) => {
   const { comment_id } = request.params;
   removeCommentById(comment_id)
@@ -135,5 +148,6 @@ module.exports = {
   patchArticleVotes,
   deleteCommentById,
   getUsers,
-  getUserByUsername
+  getUserByUsername,
+  patchCommentVotes
 };

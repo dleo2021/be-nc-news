@@ -10,6 +10,7 @@ const {
   deleteCommentById,
   getUsers,
   getUserByUsername,
+  patchCommentVotes,
 } = require("./controllers/controller");
 const app = express();
 
@@ -32,6 +33,8 @@ app.get("/api/users/:username", getUserByUsername)
 app.post("/api/articles/:article_id/comments", postComment);
 
 app.patch("/api/articles/:article_id", patchArticleVotes)
+
+app.patch("/api/comments/:comment_id", patchCommentVotes)
 
 app.delete("/api/comments/:comment_id", deleteCommentById)
 
