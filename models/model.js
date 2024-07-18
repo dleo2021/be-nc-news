@@ -28,7 +28,6 @@ const fetchArticles = (sortBy = "created_at", order = "desc", topic) => {
   const validSortByColumns = [
     "author",
     "title",
-    "body",
     "article_id",
     "created_at",
   ];

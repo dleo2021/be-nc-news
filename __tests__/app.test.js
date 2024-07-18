@@ -150,16 +150,43 @@ describe("GET /api/articles", () => {
           });
         });
     });
+    it("?sort_by=&order= query. Status 200: responds with articles sorted according to a valid column query in descending order", () => {
+      return request(app)
+        .get("/api/articles?sort_by=article_id&order=desc")
+        .expect(200)
+        .then(({ body: { articles } }) => {
+          expect(articles).toBeSortedBy("article_id", {
+            descending: true,
+          });
+        });
+    });
+    it("?sort_by=&order= query. Status 200: responds with articles sorted according to a valid column query in ascending order", () => {
+      return request(app)
+        .get("/api/articles?sort_by=author&order=asc")
+        .expect(200)
+        .then(({ body: { articles } }) => {
+          expect(articles).toBeSortedBy("author");
+        });
+    });
+    it("Status 200: responds with articles sorted by the default parameters", () => {
+      return request(app)
+        .get("/api/articles")
+        .expect(200)
+        .then(({ body: { articles } }) => {
+          expect(articles).toBeSortedBy("created_at", {
+            descending: true
+          });
+        });
+    });
     it("?sort_by=&order= query. Status 200: responds with articles sorted by any valid column query and a specified order (asc)", () => {
       return request(app)
         .get("/api/articles?sort_by=title&order=asc")
         .expect(200)
         .then(({ body: { articles } }) => {
-          expect(articles).toBeSortedBy("title", {
-            ascending: true,
-          });
+          expect(articles).toBeSortedBy("title");
         });
     });
+    // Errors below
     it("?sort_by= reponds with a status 400: bad request when passed an invalid sort_by query", () => {
       return request(app)
         .get("/api/articles?sort_by=not-a-valid-column")
