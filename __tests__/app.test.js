@@ -544,3 +544,26 @@ describe("GET /api/users", () => {
       });
   });
 });
+
+describe("GET /api/users/:username", () => {
+  it("Get 200: responds with a user object with username, name and avatar_url properties", () => {
+    return request(app)
+      .get("/api/users/lurker")
+      .expect(200)
+      .then(({body: {user}}) => {
+        expect(user).toMatchObject({
+          name: "do_nothing",
+          username: "lurker",
+          avatar_url: "https://www.golenbock.com/wp-content/uploads/2015/01/placeholder-user.png"
+        })
+      })
+  })
+  it("Responds with an error 404 status if passed a valid entry but the username does not exist", () => {
+    return request(app)
+    .get("/api/users/not-a-username")
+    .expect(404)
+    .then(({body: {message}}) => {
+      expect(message).toBe("Username not found")
+    })
+  })
+})
