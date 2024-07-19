@@ -9,6 +9,7 @@ const {
   fetchUsers,
   fetchUserByUsername,
   updateCommentVotes,
+  createArticle,
 } = require("../models/model");
 const endpoints = require("../endpoints.json");
 const fs = require("fs/promises");
@@ -80,15 +81,15 @@ const getUsers = (request, response, next) => {
 };
 
 const getUserByUsername = (request, response, next) => {
-  const {username} = request.params
+  const { username } = request.params;
   fetchUserByUsername(username)
-  .then((user) => {
-    response.status(200).send({user})
-  })
-  .catch((err) => {
-    next(err)
-  })
-}
+    .then((user) => {
+      response.status(200).send({ user });
+    })
+    .catch((err) => {
+      next(err);
+    });
+};
 
 const postComment = (request, response, next) => {
   const { article_id } = request.params;
@@ -97,6 +98,18 @@ const postComment = (request, response, next) => {
   createComment(article_id, { username, body })
     .then((comment) => {
       response.status(201).send({ comment });
+    })
+    .catch((err) => {
+      next(err);
+    });
+};
+
+const postArticle = (request, response, next) => {
+  const { author, title, body, topic, article_img_url } = request.body;
+
+  createArticle({ author, title, body, topic, article_img_url })
+    .then((article) => {
+      response.status(201).send({ article });
     })
     .catch((err) => {
       next(err);
@@ -116,16 +129,16 @@ const patchArticleVotes = (request, response, next) => {
 };
 
 const patchCommentVotes = (request, response, next) => {
-  const {comment_id} = request.params
-  const {inc_votes} = request.body
+  const { comment_id } = request.params;
+  const { inc_votes } = request.body;
   updateCommentVotes(comment_id, inc_votes)
-  .then((comment) => {
-    response.status(200).send({comment})
-  })
-  .catch((err) => {
-    next(err)
-  })
-}
+    .then((comment) => {
+      response.status(200).send({ comment });
+    })
+    .catch((err) => {
+      next(err);
+    });
+};
 
 const deleteCommentById = (request, response, next) => {
   const { comment_id } = request.params;
@@ -149,5 +162,6 @@ module.exports = {
   deleteCommentById,
   getUsers,
   getUserByUsername,
-  patchCommentVotes
+  patchCommentVotes,
+  postArticle,
 };

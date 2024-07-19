@@ -11,6 +11,7 @@ const {
   getUsers,
   getUserByUsername,
   patchCommentVotes,
+  postArticle,
 } = require("./controllers/controller");
 const app = express();
 
@@ -26,17 +27,19 @@ app.get("/api/articles", getArticles);
 
 app.get("/api/articles/:article_id/comments", getCommentsByarticleId);
 
-app.get("/api/users", getUsers)
+app.get("/api/users", getUsers);
 
-app.get("/api/users/:username", getUserByUsername)
+app.get("/api/users/:username", getUserByUsername);
 
 app.post("/api/articles/:article_id/comments", postComment);
 
-app.patch("/api/articles/:article_id", patchArticleVotes)
+app.post("/api/articles", postArticle);
 
-app.patch("/api/comments/:comment_id", patchCommentVotes)
+app.patch("/api/articles/:article_id", patchArticleVotes);
 
-app.delete("/api/comments/:comment_id", deleteCommentById)
+app.patch("/api/comments/:comment_id", patchCommentVotes);
+
+app.delete("/api/comments/:comment_id", deleteCommentById);
 
 app.all("*", (request, response, next) => {
   response.status(404).send({ message: "Not found" });
@@ -62,6 +65,8 @@ app.use((err, request, response, next) => {
     response
       .status(404)
       .send({ message: "Not found: article_id does not exist" });
+  } else if (err.code === "23503") {
+    response.status(404).send({ message: "Not found: topic does not exist" });
   }
   next(err);
 });
