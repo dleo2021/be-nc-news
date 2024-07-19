@@ -15,9 +15,10 @@ const fetchTopics = () => {
 
 const fetchArticleById = (articleId) => {
   return db
-    .query(`
+    .query(
+      `
       SELECT 
-        articles.*, COUNT (comments.comment_id) AS comment_count
+        articles.*, COUNT (comments.comment_id)::INT AS comment_count
       FROM 
         articles
       LEFT JOIN 
@@ -28,7 +29,9 @@ const fetchArticleById = (articleId) => {
         articles.article_id = $1
       GROUP BY 
         articles.article_id;
-    `, [articleId])
+    `,
+      [articleId]
+    )
 
     .then(({ rows }) => {
       if (rows.length === 0) {
@@ -39,12 +42,7 @@ const fetchArticleById = (articleId) => {
 };
 
 const fetchArticles = (sortBy = "created_at", order = "desc", topic) => {
-  const validSortByColumns = [
-    "author",
-    "title",
-    "article_id",
-    "created_at",
-  ];
+  const validSortByColumns = ["author", "title", "article_id", "created_at"];
   const validOrders = ["asc", "desc"];
 
   if (!validSortByColumns.includes(sortBy)) {
@@ -64,7 +62,7 @@ const fetchArticles = (sortBy = "created_at", order = "desc", topic) => {
   SELECT 
     articles.author, articles.title, articles.article_id, articles.topic, articles.created_at, articles.votes, articles.article_img_url, 
   COUNT
-    (comments.comment_id) AS comment_count 
+    (comments.comment_id)::INT AS comment_count 
   FROM 
     articles 
   LEFT JOIN 
@@ -140,16 +138,19 @@ const fetchUsers = () => {
 };
 
 const fetchUserByUsername = (username) => {
-
-  return db.query(`
-    SELECT * FROM users WHERE username = $1;`, [username])
-    .then(({rows}) => {
-      if(rows.length === 0) {
-        return Promise.reject({status: 404, message: "Username not found"})
+  return db
+    .query(
+      `
+    SELECT * FROM users WHERE username = $1;`,
+      [username]
+    )
+    .then(({ rows }) => {
+      if (rows.length === 0) {
+        return Promise.reject({ status: 404, message: "Username not found" });
       }
-      return rows[0]
-    })
-}
+      return rows[0];
+    });
+};
 
 const createComment = (articleId, { username, body }) => {
   const createdAt = new Date();
@@ -177,6 +178,66 @@ const createComment = (articleId, { username, body }) => {
     RETURNING *;`,
       [body, username, articleId, createdAt]
     )
+    .then(({ rows }) => {
+      return rows[0];
+    });
+};
+
+const createArticle = ({
+  author,
+  title,
+  body,
+  topic,
+  article_img_url = "https://www.default-img-provided.com",
+}) => {
+  if (!author || !title || !body || !topic) {
+    return Promise.reject({
+      status: 400,
+      message: "Bad request: Missing required information",
+    });
+  }
+  const validAuthors = ["rogersop", "lurker", "butter_bridge", "icellusedkars"];
+
+  if (!validAuthors.includes(author)) {
+    return Promise.reject({
+      status: 400,
+      message: "Bad request: Invalid author",
+    });
+  }
+
+  return checkTopicExists(topic)
+    .then(() => {
+      return db.query(
+        `
+      INSERT INTO
+        articles (author, title, body, topic, article_img_url, votes)
+      VALUES
+        ($1, $2, $3, $4, $5, 0)
+      RETURNING *;
+      `,
+        [author, title, body, topic, article_img_url]
+      );
+    })
+    .then((result) => {
+      const article = result.rows[0];
+      return db.query(
+        `
+      SELECT 
+        articles.*, COUNT (comments.comment_id)::INT AS comment_count
+      FROM 
+        articles
+      LEFT JOIN 
+        comments 
+      ON 
+        articles.article_id = comments.article_id
+      WHERE 
+        articles.article_id = $1
+      GROUP BY 
+        articles.article_id;
+    `,
+        [article.article_id]
+      );
+    })
     .then(({ rows }) => {
       return rows[0];
     });
@@ -213,25 +274,34 @@ const updateArticleVotes = (articleId, votes) => {
 };
 
 const updateCommentVotes = (commentId, votes) => {
-
   if (!votes) {
-    return Promise.reject({status: 400, message: "Bad request: Invalid request body"})
+    return Promise.reject({
+      status: 400,
+      message: "Bad request: Invalid request body",
+    });
   }
-  return db.query(`
+  return db
+    .query(
+      `
     UPDATE 
       comments 
     SET 
       votes = votes + $1 
     WHERE comment_id = $2 
     RETURNING *;
-  `, [votes, commentId])
-  .then(({rows}) => {
-    if (rows.length === 0) {
-      return Promise.reject({status: 404, message: "Not found: comment does not exist"})
-    }
-    return rows[0]
-  })
-}
+  `,
+      [votes, commentId]
+    )
+    .then(({ rows }) => {
+      if (rows.length === 0) {
+        return Promise.reject({
+          status: 404,
+          message: "Not found: comment does not exist",
+        });
+      }
+      return rows[0];
+    });
+};
 
 const removeCommentById = (commentId) => {
   return db
@@ -265,5 +335,6 @@ module.exports = {
   removeCommentById,
   fetchUsers,
   fetchUserByUsername,
-  updateCommentVotes
+  updateCommentVotes,
+  createArticle,
 };

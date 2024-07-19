@@ -70,7 +70,7 @@ describe("GET /api/articles/:article_id", () => {
           votes: 100,
           article_img_url:
             "https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700",
-          comment_count: '11'
+          comment_count: 11,
         });
       });
   });
@@ -124,8 +124,8 @@ describe("GET /api/articles", () => {
         const fifthArticle = articles.find(
           (article) => article.article_id === 5
         );
-        expect(firstArticle.comment_count).toBe("11");
-        expect(fifthArticle.comment_count).toBe("2");
+        expect(firstArticle.comment_count).toBe(11);
+        expect(fifthArticle.comment_count).toBe(2);
       });
   });
   it("Sorts the articles in descending order based on created_at", () => {
@@ -175,7 +175,7 @@ describe("GET /api/articles", () => {
         .expect(200)
         .then(({ body: { articles } }) => {
           expect(articles).toBeSortedBy("created_at", {
-            descending: true
+            descending: true,
           });
         });
     });
@@ -550,42 +550,43 @@ describe("GET /api/users/:username", () => {
     return request(app)
       .get("/api/users/lurker")
       .expect(200)
-      .then(({body: {user}}) => {
+      .then(({ body: { user } }) => {
         expect(user).toMatchObject({
           name: "do_nothing",
           username: "lurker",
-          avatar_url: "https://www.golenbock.com/wp-content/uploads/2015/01/placeholder-user.png"
-        })
-      })
-  })
+          avatar_url:
+            "https://www.golenbock.com/wp-content/uploads/2015/01/placeholder-user.png",
+        });
+      });
+  });
   it("Responds with an error 404 status if passed a valid entry but the username does not exist", () => {
     return request(app)
-    .get("/api/users/not-a-username")
-    .expect(404)
-    .then(({body: {message}}) => {
-      expect(message).toBe("Username not found")
-    })
-  })
-})
+      .get("/api/users/not-a-username")
+      .expect(404)
+      .then(({ body: { message } }) => {
+        expect(message).toBe("Username not found");
+      });
+  });
+});
 
 describe("PATCH /api/comments/:comment_id", () => {
   it("Patch 200: responds with the updated comment object with votes incremented according to request body", () => {
-    const votes = ({inc_votes: 1})
+    const votes = { inc_votes: 1 };
     return request(app)
-    .patch("/api/comments/7")
-    .send(votes)
-    .expect(200)
-    .then(({body: {comment}}) => {
-      expect(comment).toMatchObject({
-        comment_id: 7,
-        body: 'Lobster pot',
-        article_id: 1,
-        author: 'icellusedkars',
-        votes: 1,
-        created_at: "2020-05-15T20:19:00.000Z"
-      })
-    })
-  })
+      .patch("/api/comments/7")
+      .send(votes)
+      .expect(200)
+      .then(({ body: { comment } }) => {
+        expect(comment).toMatchObject({
+          comment_id: 7,
+          body: "Lobster pot",
+          article_id: 1,
+          author: "icellusedkars",
+          votes: 1,
+          created_at: "2020-05-15T20:19:00.000Z",
+        });
+      });
+  });
   it("responds with a status 200: sends updated comment when extra keys are sent on request body (they are ignored as long as inc_votes is present", () => {
     const votes = {
       inc_votes: 27,
@@ -596,15 +597,14 @@ describe("PATCH /api/comments/:comment_id", () => {
       .patch("/api/comments/13")
       .send(votes)
       .expect(200)
-      .then(({ body: {comment} }) => {
-        console.log(comment)
+      .then(({ body: { comment } }) => {
         expect(comment).toEqual({
           comment_id: 13,
-          body: 'Fruit pastilles',
+          body: "Fruit pastilles",
           article_id: 1,
-          author: 'icellusedkars',
+          author: "icellusedkars",
           votes: 27,
-          created_at: '2020-06-15T10:25:00.000Z'
+          created_at: "2020-06-15T10:25:00.000Z",
         });
       });
   });
@@ -624,7 +624,7 @@ describe("PATCH /api/comments/:comment_id", () => {
       .patch("/api/comments/11")
       .send(votes)
       .expect(400)
-      .then(({ body: {message} }) => {
+      .then(({ body: { message } }) => {
         expect(message).toBe("Bad request");
       });
   });
@@ -644,7 +644,7 @@ describe("PATCH /api/comments/:comment_id", () => {
       .patch("/api/comments/not-a-valid-id")
       .send(votes)
       .expect(400)
-      .then(({ body: {message} }) => {
+      .then(({ body: { message } }) => {
         expect(message).toBe("Bad request");
       });
   });
@@ -654,8 +654,149 @@ describe("PATCH /api/comments/:comment_id", () => {
       .patch("/api/comments/8")
       .send(votes)
       .expect(400)
-      .send(({ body: {message} }) => {
+      .send(({ body: { message } }) => {
         expect(message).toBe("Bad request: Invalid request body");
       });
   });
-})
+});
+
+describe("POST /api/articles", () => {
+  it("Post 201: responds with created article with all required keys", () => {
+    const newArticle = {
+      author: "rogersop",
+      title: "All About Cats",
+      body: "There are many different species, too many to name here.",
+      topic: "cats",
+    };
+    return request(app)
+      .post("/api/articles")
+      .send(newArticle)
+      .expect(201)
+      .then(({ body: { article } }) => {
+        console.log(article)
+        expect(article).toEqual({
+          article_id: 14,
+          title: "All About Cats",
+          topic: "cats",
+          author: "rogersop",
+          body: "There are many different species, too many to name here.",
+          created_at: expect.any(String),
+          votes: 0,
+          article_img_url: "https://www.default-img-provided.com",
+          comment_count: 0,
+        });
+      });
+  });
+  it("Post 201: responds with creates article when request body has all required keys and additional information (it is ignored)", () => {
+    const newArticle = {
+      author: "butter_bridge",
+      title: "Penguins are the best",
+      body: "Nothing compares to a penguin, they are the greatest",
+      topic: "mitch",
+      penguinName: "emperor",
+      article_img_url: "https://www.penguins-are-the-best.com",
+    };
+    return request(app)
+      .post("/api/articles")
+      .send(newArticle)
+      .expect(201)
+      .then(({ body: { article } }) => {
+        expect(article).toEqual({
+          article_id: 14,
+          title: "Penguins are the best",
+          topic: "mitch",
+          author: "butter_bridge",
+          body: "Nothing compares to a penguin, they are the greatest",
+          created_at: expect.any(String),
+          votes: 0,
+          article_img_url: "https://www.penguins-are-the-best.com",
+          comment_count: 0,
+        });
+      });
+  });
+  it("Responds with a 400 when no author is provided", () => {
+    const newArticle = {
+      title: "All About Cats",
+      body: "There are many different species, too many to name here.",
+      topic: "cats",
+    };
+    return request(app)
+      .post("/api/articles")
+      .send(newArticle)
+      .expect(400)
+      .then(({ body: { message } }) => {
+        expect(message).toBe("Bad request: Missing required information");
+      });
+  });
+  it("Responds with a 400 when no title is provided", () => {
+    const newArticle = {
+      author: "lurker",
+      body: "There are many different species, too many to name here.",
+      topic: "cats",
+    };
+    return request(app)
+      .post("/api/articles")
+      .send(newArticle)
+      .expect(400)
+      .then(({ body: { message } }) => {
+        expect(message).toBe("Bad request: Missing required information");
+      });
+  });
+  it("Responds with a 400 when no body is provided", () => {
+    const newArticle = {
+      author: "lurker",
+      topic: "cats",
+    };
+    return request(app)
+      .post("/api/articles")
+      .send(newArticle)
+      .expect(400)
+      .then(({ body: { message } }) => {
+        expect(message).toBe("Bad request: Missing required information");
+      });
+  });
+  it("Responds with a 400 when the topic not provided", () => {
+    const newArticle = {
+      author: "lurker",
+      title: "All About Cats",
+      body: "There are many different species, too many to name here.",
+    };
+    return request(app)
+      .post("/api/articles")
+      .send(newArticle)
+      .expect(400)
+      .then(({ body: { message } }) => {
+        expect(message).toBe("Bad request: Missing required information");
+      });
+  });
+  it("Responds with a 404 when the topic is provided but does not exist", () => {
+    const newArticle = {
+      author: "lurker",
+      title: "All About Cats",
+      body: "There are many different species, too many to name here.",
+      topic: "humans",
+    };
+    return request(app)
+      .post("/api/articles")
+      .send(newArticle)
+      .expect(404)
+      .then(({ body: { message } }) => {
+        expect(message).toBe("Not found: topic does not exist");
+      });
+  });
+  it("Responds with an error 404 when author is provided but does not exist in database", () => {
+    const newArticle = {
+      author: "robocop",
+      title: "The Best Nickname",
+      body: "This nickname is the best out of them all",
+      topic: "cats",
+    };
+    return request(app)
+      .post("/api/articles")
+      .send(newArticle)
+      .expect(400)
+      .then(({ body: { message } }) => {
+        expect(message).toBe("Bad request: Invalid author");
+      });
+  });
+});
