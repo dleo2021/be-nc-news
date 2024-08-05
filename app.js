@@ -1,4 +1,5 @@
 const express = require("express");
+const cors = require("cors");
 const {
   getTopics,
   getDescriptionOfEndpoints,
@@ -14,6 +15,8 @@ const {
   postArticle,
 } = require("./controllers/controller");
 const app = express();
+
+app.use(cors());
 
 app.use(express.json());
 
